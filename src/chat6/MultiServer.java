@@ -133,36 +133,38 @@ public class MultiServer {
 
 			try {
 				/*
-				 * 클라이언트가 보내는 최초 메세지는 대화명이므로 접속에 대한 부분을 출력하고 Echo 한다.
+				 * 클라이언트가 보내는 최초메세지는 대화명이므로 접속에 대한 부분을 출력하고 Echo 한다.
 				 */
-
+				// 클라이언트의 이름을 읽어온다.
 				name = in.readLine();
-
+				// 방급 접속한 클라이언트를 제외한 나머지에게 입장을 알린다.
 				sendAllMsg("", name + "님이 입장하셨습니다.");
-
+				// 현재 접속한 클라이언트를 HashMap에 저장한다.
 				clientMap.put(name, out);
-
+				// 접속자의 이름을 서버의 콘솔에 띄워주고...
 				System.out.println(name + " 접속");
+				// HashMap에 저장된 클라이언트의 수를 확인할 수 있다.
 				System.out.println("현재 접속자 수는" + clientMap.size() + "명 입니다.");
 
-				/*
-				 * 두 번째부터는 실제 메세지이므로 지속적으로 읽어서 Echo 한다.
-				 */
+				// 두 번째 입력부터는 메세지이므로 모든 클라이언트에게 Echo 한다.
 				while (in != null) {
 					s = in.readLine();
 					if (s == null)
 						break;
-
+					// 서버의 콘솔에 출력되고..
 					System.out.println(name + " >> " + s);
+					// 모든 클라이언트에게 Echo 한다.
 					sendAllMsg(name, s);
 				}
 			} catch (Exception e) {
 				System.out.println("예외: " + e);
 			} finally {
 				/*
-				 * try문의 while()문을 탈출하는 것이 해당 쓰레드가 종료된다는 의미이므로 아래와 같이 쓰레드의 이름을 콘솔에 출력한다.
+				 * 클라이언트가 접속을 종료하면 Socket예외가 발생하게 되어 finally절로 진입하게 된다. 이때 "대화명"을 통해 Map에서
+				 * 클라이언트의 정보를 제거한다.
 				 */
 				clientMap.remove(name);
+				// 클라이언트가 접속자의 퇴장을 알린다.
 				sendAllMsg("", name + "님이 퇴장하셨습니다.");
 				System.out.println(name + " [" + Thread.currentThread().getName() + "] 퇴장");
 				System.out.println("현재 접속자 수는" + clientMap.size() + "명 입니다.");
