@@ -144,6 +144,7 @@ public class MultiServer {
 			try {
 				// 첫번째 메세지는 대화명이므로 접속을 알린다.
 				name = in.readLine();
+
 				sendAllMsg("", name + "님이 입장하셨습니다.");
 				clientMap.put(name, out);
 				System.out.println(name + " 접속");

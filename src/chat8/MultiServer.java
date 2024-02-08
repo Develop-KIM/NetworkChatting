@@ -7,10 +7,15 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 public class MultiServer {
+
+	// 최대 인원수
+	static final int MAX_CONNECTIONS = 5;
 
 	// 멤버변수
 	static ServerSocket serverSocket = null;
@@ -19,16 +24,28 @@ public class MultiServer {
 	// 클라이언트 정보를 저장하기 위한 Map 컬렉션 생성
 	Map<String, PrintWriter> clientMap;
 
+	Set<String> blackList;
+	Set<String> forbiddenWords;
+
 	// 생성자
 	public MultiServer() {
-		/*
-		 * 클라이언트의 이름과 접속시 생성한 출력스트림을 저장할 HashMap 인스턴스 생성
-		 */
+		// 클라이언트의 출력스트림을 저장할 HashMap 인스턴스 생성
 		clientMap = new HashMap<String, PrintWriter>();
-		/*
-		 * HashMap 동기화 설정. 쓰레드가 사용자 정보에 동시접근하는 것을 차단한다.
-		 */
+
+		// 블랙리스트 생성 및 사용자 추가
+		blackList = new HashSet<String>();
+		blackList.add("성우리");
+
+		// 금칙어 생성 및 추가
+		forbiddenWords = new HashSet<String>();
+		forbiddenWords.add("ㅗ");
+		forbiddenWords.add("ㅅㅂ");
+
+		// HashMap, 블랙리스트, 금칙어 동기화 설정.
+		Collections.synchronizedSet(blackList);
 		Collections.synchronizedMap(clientMap);
+		Collections.synchronizedSet(forbiddenWords);
+
 	}
 
 	// 채팅 서버 초기화
@@ -43,6 +60,15 @@ public class MultiServer {
 			 */
 			while (true) {
 				socket = serverSocket.accept();
+
+				if (clientMap.size() >= MAX_CONNECTIONS) {
+					PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+					out.println("최대 접속 인원수를 초과했습니다.");
+					out.close();
+					socket.close();
+					continue; // 접속을 허용하지 않고 다음 루프로 이동합니다.
+				}
+
 				/*
 				 * 클라이언트 1명당 하나의 쓰레드가 생성되어 메세지 전송 및 수신을 담당한다.
 				 */
@@ -144,6 +170,17 @@ public class MultiServer {
 			try {
 				// 첫번째 메세지는 대화명이므로 접속을 알린다.
 				name = in.readLine();
+
+				if (blackList.contains(name)) {
+					this.socket.close();
+					return;
+				}
+
+				while (clientMap.containsKey(name)) {
+					out.println("이미 존재하는 대화명입니다. 다른 대화명을 입력해주세요.");
+					name = in.readLine();
+				}
+
 				sendAllMsg("", name + "님이 입장하셨습니다.");
 				clientMap.put(name, out);
 				System.out.println(name + " 접속");
@@ -152,6 +189,24 @@ public class MultiServer {
 				// 두번째 메세지부터는 "대화내용"
 				while (in != null) {
 					s = in.readLine();
+
+					if (s.trim().isEmpty()) // 사용자가 아무것도 입력하지 않은 경우를 체크합니다.
+						continue; // 아무것도 하지 않고 다음 루프로 넘어갑니다.
+
+					// 입력 받은 문자열을 공백으로 분리하여 각 단어를 검사
+					String[] words = s.split(" ");
+					boolean isProhibited = false;
+					for (String word : words) {
+						if (forbiddenWords.contains(word)) {
+							out.println("금칙어를 사용하셨습니다. 메시지가 전송되지 않았습니다.");
+							isProhibited = true;
+							break;
+						}
+					}
+
+					if (isProhibited)
+						continue;
+
 					if (s == null)
 						break;
 					// 서버의 콘솔에는 메세지를 그대로 출력한다.
@@ -194,7 +249,10 @@ public class MultiServer {
 			} catch (Exception e) {
 				System.out.println("예외:" + e);
 			} finally {
+				clientMap.remove(name);
+				sendAllMsg("", name + "님이 퇴장하셨습니다.");
 				System.out.println(Thread.currentThread().getName() + " 종료");
+				System.out.println("현재 접속자 수는 " + clientMap.size() + "명 입니다.");
 
 				try {
 					in.close();
