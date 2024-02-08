@@ -28,6 +28,7 @@ public class Sender extends Thread {
 		Scanner s = new Scanner(System.in);
 
 		try {
+
 			// 최초 서버로 전송하는 메세지는 대화명
 			out.println(name);
 
@@ -42,6 +43,7 @@ public class Sender extends Thread {
 					} else {
 						// 나머지는 서버로 즉시 전송한다.
 						out.println(s2);
+
 					}
 				} catch (Exception e) {
 					System.out.println("예외 > Sender > run1: " + e);

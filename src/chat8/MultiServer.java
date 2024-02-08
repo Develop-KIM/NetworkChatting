@@ -5,6 +5,9 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -151,6 +154,9 @@ public class MultiServer {
 		Socket socket;
 		PrintWriter out = null;
 		BufferedReader in = null;
+		private static final String DB_URL = "jdbc:oracle:thin:@localhost:1521:xe";
+		private static final String DB_USER = "study";
+		private static final String DB_PASSWORD = "1234";
 
 		public MultiServerT(Socket socket) {
 			this.socket = socket;
@@ -168,6 +174,9 @@ public class MultiServer {
 			String s = "";
 
 			try {
+				Class.forName("oracle.jdbc.driver.OracleDriver");
+				Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+
 				// 첫번째 메세지는 대화명이므로 접속을 알린다.
 				name = in.readLine();
 
@@ -211,6 +220,19 @@ public class MultiServer {
 						break;
 					// 서버의 콘솔에는 메세지를 그대로 출력한다.
 					System.out.println(name + " >> " + s);
+
+					PreparedStatement pstmt = null;
+					try {
+						String sql = "insert into chat_talking (대화명, 대화내용, 입력날짜) values (?, ?, current_date)";
+						pstmt = connection.prepareStatement(sql);
+						pstmt.setString(1, name);
+						pstmt.setString(2, s);
+						pstmt.executeUpdate();
+					} finally {
+						if (pstmt != null) {
+							pstmt.close();
+						}
+					}
 
 					/*
 					 * 귓속말형식 => /to 수신자명 대화내용 블라블라
