@@ -272,8 +272,13 @@ public class MultiServer {
 							out.println("귓속말 고정 설정이 해제되었습니다.");
 						}
 					} else {
-						// 슬러쉬가 없다면 일반 대화내용
-						sendAllMsg(name, s);
+						if (fixedReceiver != null) {
+							// 고정된 귓속말 수신자가 있으면 그 사람에게만 메시지를 전송합니다.
+							sendAllMsg(name, s, fixedReceiver);
+						} else {
+							// 고정된 귓속말 수신자가 없으면 모든 사람에게 메시지를 전송합니다.
+							sendAllMsg(name, s);
+						}
 					}
 
 				}
