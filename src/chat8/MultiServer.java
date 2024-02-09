@@ -157,6 +157,7 @@ public class MultiServer {
 		private static final String DB_URL = "jdbc:oracle:thin:@localhost:1521:xe";
 		private static final String DB_USER = "study";
 		private static final String DB_PASSWORD = "1234";
+		String fixedReceiver = null;
 
 		public MultiServerT(Socket socket) {
 			this.socket = socket;
@@ -261,6 +262,14 @@ public class MultiServer {
 							 */
 							sendAllMsg(name, msgContent, strArr[1]);
 
+						} else if (strArr[0].equals("/fixto")) {
+							// 고정된 귓속말 수신자를 설정합니다.
+							fixedReceiver = strArr[1];
+							out.println(fixedReceiver + "님에게 귓속말 고정 설정을 완료했습니다.");
+						} else if (strArr[0].equals("/unfixto")) {
+							// 고정된 귓속말 수신자를 해제합니다.
+							fixedReceiver = null;
+							out.println("귓속말 고정 설정이 해제되었습니다.");
 						}
 					} else {
 						// 슬러쉬가 없다면 일반 대화내용
