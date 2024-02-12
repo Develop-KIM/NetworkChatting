@@ -122,7 +122,6 @@ public class MultiServer {
 		private static final String DB_USER = "study";
 		private static final String DB_PASSWORD = "1234";
 		String fixedReceiver = null;
-		Set<String> blockedUsers = new HashSet<>();
 
 		public MultiServerT(Socket socket) {
 			this.socket = socket;
