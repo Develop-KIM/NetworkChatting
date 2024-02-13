@@ -114,7 +114,6 @@ public class MultiServer {
 				if (clientName.equals(receiveName)) {
 					Set<String> blockedUsers = blockedUsersMap.get(receiveName);
 					if (blockedUsers != null && blockedUsers.contains(name)) {
-						// 차단된 사용자에게는 메시지를 보내지 않음
 						continue;
 					}
 
