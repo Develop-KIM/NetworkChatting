@@ -25,6 +25,7 @@ public class MultiServer {
 	Map<String, PrintWriter> clientMap;
 	Set<String> blackList;
 	Set<String> forbiddenWords;
+	Map<String, Set<String>> blockedUsersMap = new HashMap<>();
 
 	public MultiServer() {
 		clientMap = new HashMap<String, PrintWriter>();
@@ -83,7 +84,13 @@ public class MultiServer {
 
 		while (it.hasNext()) {
 			try {
-				PrintWriter it_out = (PrintWriter) clientMap.get(it.next());
+				String clientName = it.next();
+				PrintWriter it_out = (PrintWriter) clientMap.get(clientName);
+
+				Set<String> blockedUsers = blockedUsersMap.get(clientName);
+				if (blockedUsers != null && blockedUsers.contains(name)) {
+					continue;
+				}
 
 				if (name.equals("")) {
 					it_out.println(msg);
@@ -101,11 +108,16 @@ public class MultiServer {
 
 		while (it.hasNext()) {
 			try {
-
 				String clientName = it.next();
 				PrintWriter it_out = (PrintWriter) clientMap.get(clientName);
 
 				if (clientName.equals(receiveName)) {
+					Set<String> blockedUsers = blockedUsersMap.get(receiveName);
+					if (blockedUsers != null && blockedUsers.contains(name)) {
+						// 차단된 사용자에게는 메시지를 보내지 않음
+						continue;
+					}
+
 					it_out.println("[귓속말]" + name + ":" + msg);
 				}
 			} catch (Exception e) {
@@ -217,6 +229,22 @@ public class MultiServer {
 
 						if (strArr[0].equals("/list")) {
 							showClientList();
+							continue;
+						}
+
+						if (strArr[0].equals("/block")) {
+							Set<String> blockedUsers = blockedUsersMap.getOrDefault(name, new HashSet<>());
+							blockedUsers.add(strArr[1]);
+							blockedUsersMap.put(name, blockedUsers);
+							out.println(strArr[1] + "님을 차단하였습니다.");
+							continue;
+						}
+						if (strArr[0].equals("/unblock")) {
+							Set<String> blockedUsers = blockedUsersMap.get(name);
+							if (blockedUsers != null) {
+								blockedUsers.remove(strArr[1]);
+							}
+							out.println(strArr[1] + "님의 차단을 해제하였습니다.");
 							continue;
 						}
 
